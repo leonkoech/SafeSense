@@ -1,11 +1,40 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:swipe_aid/views/car.dart';
+import 'package:swipe_aid/components/CarBorder.dart';
+// import 'package:swipe_aid/views/car.dart';
+
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:swipe_aid/views/collision.dart';
+
+import '../components/CarBorder.dart';
+
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+  
+   Map<String, String> bluetoothMap = {
+    'E8:6B:EA:D3:70:46': 'Front Left',
+    'E8:6B:EA:D4:01:EA': 'Front Right',
+    'EC:64:C9:86:62:02': 'Back Left',
+    'E0:6B:EA:D3:70:46': 'Back Right',
+    'key3': 'unknown',
+  };
+
+  SensorName(String ID) {
+    return getValueFromMapOrFallback(bluetoothMap, ID, 'key3');
+  }
+
+  displaySensor(String SensorName) {
+    return SensorName != 'unknown';
+  }
 
 class Sensors extends StatefulWidget {
   const Sensors({Key? key}) : super(key: key);
@@ -19,6 +48,7 @@ class _SensorsState extends State<Sensors> {
   void initState() {
     super.initState();
     _initializeBluetooth();
+    _startBluetoothScan();
   }
 
   Future<void> _initializeBluetooth() async {
@@ -48,48 +78,7 @@ class _SensorsState extends State<Sensors> {
     // Your existing Bluetooth initialization code here...
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF1B1B1E),
-      appBar: AppBar(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: const Text(
-          "Sensor Connection",
-          style: TextStyle(color: Color(0xFFFBFFFE)),
-        ),
-      ),
-      body: BluetoothDeviceList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your action here
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CarMode()),
-          );
-        },
-        child: Icon(Icons.arrow_right), // You can change the icon
-        backgroundColor: Colors.blue, // You can change the background color
-      ),
-    );
-  }
-}
-
-class BluetoothDeviceList extends StatefulWidget {
-  @override
-  _BluetoothDeviceListState createState() => _BluetoothDeviceListState();
-}
-
-class _BluetoothDeviceListState extends State<BluetoothDeviceList> {
   List<BluetoothDevice> devices = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _startBluetoothScan();
-  }
 
   void _startBluetoothScan() async {
     // Start scanning for Bluetooth devices
@@ -109,28 +98,192 @@ class _BluetoothDeviceListState extends State<BluetoothDeviceList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: devices.length,
-      itemBuilder: (context, index) {
-        return BluetoothDeviceButton(device: devices[index]);
-      },
+    return Scaffold(
+      backgroundColor: Color(0xFF1B1B1E),
+      appBar: AppBar(
+        elevation: 0.0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        title: const Text(
+          "Sensor Connection",
+          style: TextStyle(color: Color(0xFFFBFFFE)),
+        ),
+      ),
+      body: BluetoothDeviceList(
+        devices: devices,
+      ),
     );
   }
 }
 
-class BluetoothDeviceButton extends StatefulWidget {
-  final BluetoothDevice device;
+class BluetoothDeviceList extends StatefulWidget {
+  final List<BluetoothDevice> devices;
 
-  BluetoothDeviceButton({required this.device});
+  const BluetoothDeviceList({super.key, required this.devices});
 
   @override
-  _BluetoothDeviceButtonState createState() => _BluetoothDeviceButtonState();
+  _BluetoothDeviceListState createState() => _BluetoothDeviceListState();
 }
 
-class _BluetoothDeviceButtonState extends State<BluetoothDeviceButton> {
+class _BluetoothDeviceListState extends State<BluetoothDeviceList> {
+  final StreamController<double> _speedController = StreamController<double>();
+
+  Stream<double> get speedStream => _speedController.stream;
+
+  final LocationSettings locationSettings = const LocationSettings(
+    accuracy: LocationAccuracy.high,
+    distanceFilter: 100,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _startListening();
+  }
+
+  @override
+  void dispose() {
+    _speedController.close();
+    super.dispose();
+  }
+
+  void _startListening() async {
+    try {
+      Position position = await _determinePosition();
+      findDistance(position);
+    } catch (e) {
+      // Handle error (e.g., location services disabled, permissions denied)
+      print('Error: $e');
+    }
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw 'Location services are disabled.';
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw 'Location permissions are denied';
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw 'Location permissions are permanently denied.';
+    }
+
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: locationSettings.accuracy);
+  }
+
+  void findDistance(Position initialPosition) {
+    Geolocator.getPositionStream(locationSettings: locationSettings)
+        .listen((position) {
+      // Convert speed from m/s to mph
+      double speedMph = position.speed * 2.23694;
+      _speedController.add(speedMph);
+    });
+  }
+
+
+
+  //  List<CustomBorderContainerConfig> containerConfigs
+
+List<Widget> DevicesList() {
+  List<Widget> deviceList = [];
+  for (var device in widget.devices) {
+    if(displaySensor(SensorName(device.remoteId.toString()))){
+    deviceList.add(SensorRepresentation(device: device));
+    }
+  }
+  return deviceList;
+}
+
+  @override
+  Widget build(BuildContext context) {
+    // return ListView.builder(
+    //   itemCount: widget.devices.length,
+    //   itemBuilder: (context, index) {
+    //     return SensorRepresentation(device: widget.devices[index]);
+    //   },
+    // );
+    return Center(
+        child: Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.only(top: 50, bottom: 70),
+          child: StreamBuilder<double>(
+            stream: speedStream,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Text(' ${snapshot.data?.toStringAsFixed(2)} mph',
+                    style: TextStyle(color: Color(0xFFFBFFFE), fontSize: 30));
+              } else {
+                return const Text('Waiting for speed data...',
+                    style: TextStyle(color: Color(0xFFFBFFFE), fontSize: 30));
+              }
+            },
+          ),
+        ),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.only(top: 50, bottom: 70),
+            // height: MediaQuery.of(context).size.height-30,
+            // alignment: Alignment.center,
+            // color: Colors.red,
+            child: Center(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Stack(
+                    children: DevicesList()
+                    ),
+                  Image.asset(
+                    "assets/car 1.png",
+                    // height: MediaQuery.of(context).size.height-30,
+                    fit: BoxFit.fitHeight,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+      ],
+    ));
+  }
+}
+
+class SensorRepresentation extends StatefulWidget {
+  final BluetoothDevice device;
+  // final String id;
+  SensorRepresentation({required this.device});
+
+  @override
+  _SensorRepresentationState createState() => _SensorRepresentationState();
+}
+
+class _SensorRepresentationState extends State<SensorRepresentation> {
   late StreamSubscription<BluetoothConnectionState> _connectionSubscription;
   Map<String, StreamSubscription<List<int>>> _dataSubscriptions = {};
+
+  double distance = 1.0;
 // Map<String, StreamSubscription<List<int>>> _dataSubscriptions = {};
+
+double parseDoubleSafely(String value) {
+  try {
+    return double.parse(value);
+  } catch (e) {
+    // Handle the exception, e.g., return a default value or rethrow the exception.
+    print("Error parsing double: $e");
+    return 0.0; // Return a default value or any other meaningful value.
+  }
+}
 
   Future<void> _startReadingData() async {
     List<BluetoothService> services = await widget.device.discoverServices();
@@ -143,7 +296,10 @@ class _BluetoothDeviceButtonState extends State<BluetoothDeviceButton> {
               characteristic.value.listen((value) {
             List<int> receivedData = value;
             String decodedString = String.fromCharCodes(receivedData);
-            print('Received data from ${widget.device.remoteId}: $decodedString');
+            distance = (parseDoubleSafely(decodedString)/100);
+            print(
+                'Received data from ${widget.device.remoteId}: $distance');
+            
             // Process received data here
           });
         }
@@ -151,13 +307,23 @@ class _BluetoothDeviceButtonState extends State<BluetoothDeviceButton> {
     }
   }
 
+  void automaticConnect(BluetoothDevice device) {
+    if (displaySensor(SensorName(widget.device.remoteId.toString()))) {
+      device.connect();
+      print(device.remoteId.toString() + "connected");
+    }
+    // widget.device.connect()
+  }
+
   @override
   void initState() {
     super.initState();
+    automaticConnect(widget.device);
     _connectionSubscription =
         widget.device.connectionState.listen((state) async {
       if (state == BluetoothConnectionState.connected) {
         await _startReadingData();
+        // turn flag to true for data based on a map
       }
     });
   }
@@ -171,84 +337,52 @@ class _BluetoothDeviceButtonState extends State<BluetoothDeviceButton> {
     super.dispose();
   }
 
-// make sure it's uppercase
-  Map<String, String> bluetoothMap = {
-    'E8:6B:EA:D3:70:46': 'Front Left',
-    'key3': 'unknown',
-  };
-
-  SensorName(String ID) {
-    return getValueFromMapOrFallback(bluetoothMap, ID, 'key3');
-  }
-
-  displaySensor(String SensorName) {
-    return SensorName != 'unknown';
+  Widget customContainer(double distance) {
+    String sensorName = SensorName(widget.device.remoteId.toString());
+    Widget currentWidget = const SizedBox();
+    switch (sensorName) {
+      case 'Front Left':
+        currentWidget = CustomBorderContainer(
+          left: 20,
+          top: 20,
+          distance: distance,
+        );
+        break;
+      case 'Front Right':
+        currentWidget = CustomBorderContainer(
+          right: 20,
+          top: 20,
+          distance: distance,
+        );
+        // do something
+        break;
+      case 'Back Left':
+        currentWidget = CustomBorderContainer(
+          left: 20,
+          bottom: 20,
+          distance: distance,
+        );
+        // do something
+        break;
+      case 'Back Right':
+        currentWidget = CustomBorderContainer(
+          bottom: 20,
+          right: 20,
+          distance: distance,
+        );
+        // do something
+        break;
+      case "unknown":
+        currentWidget = const SizedBox();
+        break;
+      // do something else
+    }
+    return currentWidget;
   }
 
   @override
   Widget build(BuildContext context) {
-    return displaySensor(SensorName(widget.device.remoteId.toString()))
-        ? GestureDetector(
-            onTap: () async {
-              if (widget.device.isConnected) {
-                await widget.device.disconnect();
-                Fluttertoast.showToast(
-                  msg: "${widget.device.remoteId} disconnected",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Color(0xFFFBFFFE),
-                  textColor: Color(0xff1B1B1E),
-                  fontSize: 16.0,
-                );
-              } else {
-                await widget.device.connect();
-                Fluttertoast.showToast(
-                  msg: "${widget.device.remoteId} connected",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Color(0xFFFBFFFE),
-                  textColor: Color(0xff1B1B1E),
-                  fontSize: 16.0,
-                );
-              }
-            },
-            child: Container(
-              height: 80,
-              margin: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: !widget.device.isConnected
-                    ? const Color(0xFF96031A)
-                    : const Color(0xFFFBFFFE),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: ListTile(
-                  titleAlignment: ListTileTitleAlignment.center,
-                  title: Text(
-                    // widget.device.servicesList.ch?
-                    // widget.device.remoteId.toString(),
-                    SensorName(widget.device.remoteId.toString()),
-                    style: TextStyle(
-                      color: !widget.device.isConnected
-                          ? Color(0xFFFBFFFE)
-                          : Color(0xff1B1B1E),
-                    ),
-                  ),
-                  subtitle: Text(
-                    !widget.device.isConnected ? "disconnected" : "connected",
-                    style: TextStyle(
-                      color: !widget.device.isConnected
-                          ? Color(0xFFFBFFFE)
-                          : Color(0xff1B1B1E),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          )
-        : const SizedBox();
+    return customContainer(distance);
   }
 }
 

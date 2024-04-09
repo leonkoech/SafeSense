@@ -3,7 +3,7 @@ import 'package:swipe_aid/views/sensors.dart';
 // import './views/sensors.dart';
 // import './views/collision.dart';
 // import './views/carmode.dart';
-import 'package:swipe_aid/views/car.dart';
+// import 'package:swipe_aid/views/car.dart';
 
 void main() {
   runApp(const MyApp());

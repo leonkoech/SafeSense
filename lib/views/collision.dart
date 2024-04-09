@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:swipe_aid/views/car.dart';
+// import 'package:swipe_aid/views/car.dart';
 // import "../components/SideNav.dart";
 
 // import 'package:flutter_blue/flutter_blue.dart';
@@ -30,10 +30,10 @@ class _CollisionState extends State<Collision> {
          floatingActionButton: FloatingActionButton(
           onPressed: () {
             // Add your action here
-             Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CarMode()),
-              );
+            //  Navigator.push(
+            //     context,
+            //     MaterialPageRoute(builder: (context) => CarMode()),
+            //   );
           },
           child: Icon(Icons.arrow_left), // You can change the icon
           backgroundColor: Colors.blue, // You can change the background color
