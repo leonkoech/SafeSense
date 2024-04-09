@@ -19,22 +19,30 @@ import '../components/CarBorder.dart';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-  
-   Map<String, String> bluetoothMap = {
-    'E8:6B:EA:D3:70:46': 'Front Left',
-    'E8:6B:EA:D4:01:EA': 'Front Right',
-    'EC:64:C9:86:62:02': 'Back Left',
-    'E0:6B:EA:D3:70:46': 'Back Right',
-    'key3': 'unknown',
-  };
 
-  SensorName(String ID) {
-    return getValueFromMapOrFallback(bluetoothMap, ID, 'key3');
-  }
+Map<String, String> bluetoothMap = {
+  'E8:6B:EA:D3:70:46': 'Front Left',
+  'E8:6B:EA:D4:01:EA': 'Front Right',
+  'EC:64:C9:86:62:02': 'Back Left',
+  'E0:6B:EA:D3:70:46': 'Back Right',
+  'key3': 'unknown',
+};
 
-  displaySensor(String SensorName) {
-    return SensorName != 'unknown';
+SensorName(String ID) {
+  return getValueFromMapOrFallback(bluetoothMap, ID, 'key3');
+}
+
+displaySensor(String SensorName) {
+  return SensorName != 'unknown';
+}
+
+void automaticConnect(BluetoothDevice device) {
+  if (displaySensor(SensorName(device.remoteId.toString()))) {
+    device.connect();
+    print(device.remoteId.toString() + "connected");
   }
+  // widget.device.connect()
+}
 
 class Sensors extends StatefulWidget {
   const Sensors({Key? key}) : super(key: key);
@@ -99,20 +107,57 @@ class _SensorsState extends State<Sensors> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1B1B1E),
-      appBar: AppBar(
-        elevation: 0.0,
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: const Text(
-          "Sensor Connection",
-          style: TextStyle(color: Color(0xFFFBFFFE)),
+        backgroundColor: Color(0xFF1B1B1E),
+        appBar: AppBar(
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: const Text(
+            "Sensor Connection",
+            style: TextStyle(color: Color(0xFFFBFFFE)),
+          ),
         ),
-      ),
-      body: BluetoothDeviceList(
-        devices: devices,
-      ),
-    );
+        body: BluetoothDeviceList(
+          devices: devices,
+        ),
+        floatingActionButton: Column(
+            //  verticalDirection: Ver,
+            children: <Widget>[
+              FloatingActionButton(
+                onPressed: () {
+                  for (BluetoothDevice device in devices) {
+                    String sensorName = SensorName(device.remoteId.toString());
+                    if (displaySensor(sensorName)) {
+                    Fluttertoast.showToast(
+                        msg: 'Reconnecting ',
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.CENTER,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                    automaticConnect(device);
+                    }
+
+                  }
+                },
+                child: Icon(Icons.refresh), // You can change the icon
+                backgroundColor:
+                    Colors.blue, // You can change the background color
+              ),
+              FloatingActionButton(
+                onPressed: () {
+                  // Add your action here
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Collision()),
+                  );
+                },
+                child: Icon(Icons.refresh), // You can change the icon
+                backgroundColor:
+                    Colors.blue, // You can change the background color
+              ),
+            ]));
   }
 }
 
@@ -191,19 +236,17 @@ class _BluetoothDeviceListState extends State<BluetoothDeviceList> {
     });
   }
 
-
-
   //  List<CustomBorderContainerConfig> containerConfigs
 
-List<Widget> DevicesList() {
-  List<Widget> deviceList = [];
-  for (var device in widget.devices) {
-    if(displaySensor(SensorName(device.remoteId.toString()))){
-    deviceList.add(SensorRepresentation(device: device));
+  List<Widget> DevicesList() {
+    List<Widget> deviceList = [];
+    for (var device in widget.devices) {
+      if (displaySensor(SensorName(device.remoteId.toString()))) {
+        deviceList.add(SensorRepresentation(device: device));
+      }
     }
+    return deviceList;
   }
-  return deviceList;
-}
 
   @override
   Widget build(BuildContext context) {
@@ -241,9 +284,7 @@ List<Widget> DevicesList() {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Stack(
-                    children: DevicesList()
-                    ),
+                  Stack(children: DevicesList()),
                   Image.asset(
                     "assets/car 1.png",
                     // height: MediaQuery.of(context).size.height-30,
@@ -275,15 +316,15 @@ class _SensorRepresentationState extends State<SensorRepresentation> {
   double distance = 1.0;
 // Map<String, StreamSubscription<List<int>>> _dataSubscriptions = {};
 
-double parseDoubleSafely(String value) {
-  try {
-    return double.parse(value);
-  } catch (e) {
-    // Handle the exception, e.g., return a default value or rethrow the exception.
-    print("Error parsing double: $e");
-    return 0.0; // Return a default value or any other meaningful value.
+  double parseDoubleSafely(String value) {
+    try {
+      return double.parse(value);
+    } catch (e) {
+      // Handle the exception, e.g., return a default value or rethrow the exception.
+      print("Error parsing double: $e");
+      return 0.0; // Return a default value or any other meaningful value.
+    }
   }
-}
 
   Future<void> _startReadingData() async {
     List<BluetoothService> services = await widget.device.discoverServices();
@@ -296,23 +337,14 @@ double parseDoubleSafely(String value) {
               characteristic.value.listen((value) {
             List<int> receivedData = value;
             String decodedString = String.fromCharCodes(receivedData);
-            distance = (parseDoubleSafely(decodedString)/100);
-            print(
-                'Received data from ${widget.device.remoteId}: $distance');
-            
+            distance = (parseDoubleSafely(decodedString) / 100);
+            print('Received data from ${widget.device.remoteId}: $distance');
+
             // Process received data here
           });
         }
       }
     }
-  }
-
-  void automaticConnect(BluetoothDevice device) {
-    if (displaySensor(SensorName(widget.device.remoteId.toString()))) {
-      device.connect();
-      print(device.remoteId.toString() + "connected");
-    }
-    // widget.device.connect()
   }
 
   @override
