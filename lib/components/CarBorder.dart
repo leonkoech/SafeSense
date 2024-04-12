@@ -44,6 +44,7 @@ class CircleBlurPainter extends CustomPainter {
   double blurSigma;
   double distance;
 
+// TODO increase distance
   // max Distance for orange
   double maxDistance = 1;
   // min distance for red
