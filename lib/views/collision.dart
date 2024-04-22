@@ -104,8 +104,8 @@ class _CollisionState extends State<Collision> {
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
-          Text('Test: ${_response}',
-              style: TextStyle(color: Color(0xFFFBFFFE), fontSize: 16)),
+          // Text('Test: ${_response}',
+          //     style: TextStyle(color: Color(0xFFFBFFFE), fontSize: 16)),
           Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

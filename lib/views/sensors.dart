@@ -486,24 +486,6 @@ class _SensorsState extends State<Sensors> {
                           Colors.blue, // You can change the background color
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.all(10),
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        // _play();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              // TODO remove const
-                              builder: (context) => PredictionWidget()),
-                        );
-                        // playAlert.value = true;
-                      },
-                      child: Icon(Icons.arrow_right), // You can change the icon
-                      backgroundColor:
-                          Colors.blue, // You can change the background color
-                    ),
-                  ),
                   // button third
 
                   // Add more buttons here
@@ -721,7 +703,7 @@ class _SensorRepresentationState extends State<SensorRepresentation> {
             // sensorData[SensorName(widget.device.remoteId.toString())]["value"] = (distance == 0.0)? null: distance;
 
             // Process received data here
-            bool triggered = distance > 0.0 && distance < 1.1;
+            bool triggered = distance > 0.0 && distance < 0.25;
             String current_sensor_name =
                 SensorName(widget.device.remoteId.toString());
             if (displaySensor(current_sensor_name)) {

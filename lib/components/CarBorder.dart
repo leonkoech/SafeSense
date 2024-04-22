@@ -46,9 +46,9 @@ class CircleBlurPainter extends CustomPainter {
 
 // TODO increase distance
   // max Distance for orange
-  double maxDistance = 1;
+  double maxDistance = 0.7;
   // min distance for red
-  double minDistance = 0.5;
+  double minDistance = 0.25;
 
   checkColor() {
     if (distance <= minDistance) {
