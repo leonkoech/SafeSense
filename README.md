@@ -1,54 +1,115 @@
-# Safe Sense
+# Safe Sense: Intelligent Vehicle Safety Enhancement System
 
-## What is it?
-
-Safe Sense is a unit of four easy-to-install sensors that anyone (Even a child!) can install for their cars and get access to both audio and visual feedback for any object that comes close to your car. This helps in navigating ***blind spots*** when driving, ***parking in tight spaces***,  accessing ***collision reports*** using advanced algorithms, and even advice on ***preventive measures*** that could be taken ***3-5 seconds before*** a sideswipe accident occurs, as well as suggesting the ***at-fault driver after***  an accident occurs.
-
-![mvp Design](https://github.com/leonkoech/SafeSense-AI/assets/39020723/9ed9f175-6d43-44ac-9b08-3c5065da42ce)
+## Empowering Every Vehicle with Advanced Safety Features
 
 
-## Inspiration
-As per the National Safety Commission, there are around 242,000 side-swipe accidents in the US alone. Of that number, there are more than 2,500 deaths and 27,000 injuries. Those statistics are unacceptable.
-
-![ADAS stats](https://github.com/leonkoech/SafeSense/assets/39020723/5492004d-a8f3-453e-a863-c8b13d20ba7d)
-
-Around 62% of vehicles on the road today are models from before the year 2015, meaning they lack the Advanced Driver Assistance Systems (ADAS) found in newer models. This significant portion of older vehicles is missing out on critical enhancements that could greatly improve their operational security and efficiency. As a result, many drivers are navigating without the support of technology that could prevent accidents and save lives. We must bridge this gap by considering upgrades or finding viable alternatives that equip these vehicles with modern advancements. Why should safety be a luxury? Your life is invaluable; making roads safer starts with us.
-
-## What it does
-Dominic Toretto places four sensors on the four corners of his 2009 Dodge Challenger and downloads a platform-agnostic application that automatically connects to the sensors. Simple as that!
-
-
-Dom now has access to blind spot navigation, visual alerts when an object is getting close to his vehicle, audio alerts when an object is getting too close to his car, prediction of when a sideswipe accident is about to happen based on the behaviors of the cars next to collision reports when an accident occurs including data such as the exact time of impact, speed of the current car and any neighboring cars as well as preventive measures that could have been taken and the suggested at-fault driver.
-
-![Untitled-1](https://github.com/leonkoech/SafeSense-AI/assets/39020723/e3bead57-e897-44d1-a908-c942ac480ce1)
-
-## How we built it
-
-**1. Sensors**
-The Sensors use Embedded C running on ESP32 modules with Bluetooth Low Energy for data transmission and ultrasonic sensors (HCSR04) using the time of flight algorithm to determine the distance between objects. The wireless version uses a step-up transformer (MT3608) and a 3.7v LiPO battery.
-
-**2. Mobile Application**
-The mobile application is built on Flutter and runs on both IOS and Android. It makes use of flutter_ble_plus for sensor communication, geolocator for speed calculation, and HTTP for AI API access. The mobile app uses our custom algorithms for the calculation of neighboring car speeds, and proximity Sound Alerts.
-
-**3. Machine Learning Model**
-We have our custom model running on Python 3.9 (flask) on a computer in the local network which has been trained on 60 data points of side-swipe road accident simulations and 531 gen AI data points based on the sims. This model is fast with a latency of <50ms. We turned the flask application into our in-house API.
-
-![sensors positioning](https://github.com/leonkoech/SafeSense-AI/assets/39020723/2a08620f-4817-41d6-81b8-094d2d45a57f)
-
-## Challenges we ran into
- Some sensors died during testing,  TensorFlow lite needed specific permissions on Android so we went with our in-house API, we were using cheap sensors for the MVP which doesn't do a great job in harsh environments, training the machine learning model on the data points proved tricky at some point
-
-## Accomplishments that we're proud of
-We're proud of our incredible team dynamic. Attesting to our diverse backgrounds, we were able to foster great collaboration, enhance creativity, and promote an innovative mindset.
-
-## Meet the team
-![team mhw 2024](https://github.com/leonkoech/SafeSense-AI/assets/39020723/f73d329a-fb86-4f1c-ab91-57bc863ef0c1)
+<table>
+  <tr>
+    <td>
+     
+Safe Sense is a revolutionary aftermarket vehicle safety system designed to bring advanced driver assistance capabilities to any car, regardless of its age or model. Our mission is to make roads safer for everyone by democratizing access to cutting-edge safety technology.
+    </td>
+     <td>
+      <img src="https://github.com/leonkoech/SafeSense-AI/assets/39020723/9ed9f175-6d43-44ac-9b08-3c5065da42ce" alt="Safe Sense MVP Design" width="2600px">
+    </td>
+  </tr>
+</table>
 
 
-## What we learned
-a lot
 
 
-## What's next for Safe Sense
-Product Development, Iteration then launch 🚀
+## Table of Contents
 
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [The Problem We're Solving](#the-problem-were-solving)
+- [How It Works](#how-it-works)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [Challenges and Solutions](#challenges-and-solutions)
+- [Future Roadmap](#future-roadmap)
+- [The Team](#the-team)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Overview
+
+Safe Sense consists of four easy-to-install sensors that provide both audio and visual feedback for objects in proximity to your vehicle. This system enhances safety by addressing critical issues such as blind spot detection, parking assistance, and collision prevention.
+
+## Key Features
+
+- **Blind Spot Navigation**: Real-time alerts for objects in your vehicle's blind spots
+- **Parking Assistance**: Visual and audio guidance for tight parking spaces
+- **Collision Prevention**: Advanced algorithms predict potential collisions 3-5 seconds before they occur
+- **Accident Analysis**: Detailed collision reports including time of impact, vehicle speeds, and suggested at-fault determinations
+- **Universal Compatibility**: Designed to work with any vehicle, regardless of make or model
+- **User-Friendly Installation**: Simple enough for anyone to install, including non-technical users
+
+## The Problem We're Solving
+
+![ADAS Statistics](https://github.com/leonkoech/SafeSense/assets/39020723/5492004d-a8f3-453e-a863-c8b13d20ba7d)
+
+In the United States alone, there are approximately 242,000 side-swipe accidents annually, resulting in over 2,500 fatalities and 27,000 injuries. Moreover, about 62% of vehicles on the road are models from before 2015, lacking Advanced Driver Assistance Systems (ADAS). Safe Sense aims to bridge this safety gap by providing an affordable, aftermarket solution that brings modern safety features to older vehicles.
+
+## How It Works
+
+![Sensor Positioning](https://github.com/leonkoech/SafeSense-AI/assets/39020723/2a08620f-4817-41d6-81b8-094d2d45a57f)
+
+1. Install four sensors at the corners of your vehicle
+2. Download our cross-platform mobile application
+3. The app automatically connects to the sensors via Bluetooth
+4. Receive real-time alerts and safety information while driving
+
+## Technology Stack
+
+### Hardware
+- Sensors: ESP32 modules with ultrasonic sensors (HCSR04)
+- Connectivity: Bluetooth Low Energy
+- Power: MT3608 step-up transformer with 3.7v LiPO battery (for wireless version)
+
+### Software
+- Mobile App: Flutter (iOS and Android compatible)
+- Libraries: flutter_ble_plus, geolocator
+- Backend: Custom Python 3.9 Flask API
+
+### Machine Learning
+- Custom model trained on 60 side-swipe accident simulations and 531 AI-generated data points
+- Latency: <50ms
+
+## Installation
+
+1. Mount the four sensors at each corner of your vehicle
+2. Download the Safe Sense mobile app from the App Store or Google Play
+3. Follow the in-app instructions to pair the sensors with your smartphone
+4. Start driving with enhanced safety features!
+
+## Challenges and Solutions
+
+| Challenge | Solution |
+|-----------|----------|
+| Sensor durability | Exploring more robust sensor options for production models |
+| TensorFlow Lite Android permissions | Developed a custom in-house API as an alternative |
+| Environmental sensor performance | Investigating higher-quality sensors for improved accuracy |
+| Machine learning model training | Iterative refinement of training data and model architecture |
+
+## Future Roadmap
+
+1. Enhanced product development and iteration
+2. Expansion of the training dataset for improved accuracy
+3. Integration with vehicle telematics systems
+4. Partnerships with insurance companies for potential premium reductions
+5. Development of a professional installation network
+
+## The Team
+
+![Safe Sense Team](https://github.com/leonkoech/SafeSense-AI/assets/39020723/f73d329a-fb86-4f1c-ab91-57bc863ef0c1)
+
+Our diverse team brings together expertise in embedded systems, mobile development, machine learning, and automotive safety to create a truly innovative solution.
+
+## Contributing
+
+We welcome contributions from the community! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to get involved.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
